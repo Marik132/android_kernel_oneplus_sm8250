@@ -15,8 +15,12 @@ jobs:
       - name: Setup Build Environment
         run: |
           sudo apt update
-          # Встановлюємо все потрібне з репозиторіїв Ubuntu
           sudo apt install -y bc bison build-essential flex git libssl-dev libelf-dev clang lld llvm libncurses-dev gcc-aarch64-linux-gnu
+
+      - name: Fix Python Syntax
+        run: |
+          # Автоматично виправляємо код Python 2 на Python 3 для скриптів ядра
+          find . -name "*.py" -exec sed -i 's/print \(.*\)/print(\1)/g' {} +
 
       - name: Build Kernel
         run: |
@@ -24,14 +28,13 @@ jobs:
           export CROSS_COMPILE=aarch64-linux-gnu-
           export CC=clang
           
-          # 1. Створюємо конфіг (використовуємо твій Kona/Kebab профіль)
+          # 1. Створюємо конфіг
           make O=out ARCH=arm64 vendor/kona-perf_defconfig
           
           # 2. Фікс нових опцій ядра
           make O=out ARCH=arm64 CC=clang olddefconfig
           
           # 3. Повна збірка ядра
-          # Додаємо змінні для llvm-інструментів, щоб уникнути помилок з несумісністю
           make -j$(nproc) O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- \
           NM=llvm-nm \
           OBJCOPY=llvm-objcopy \
