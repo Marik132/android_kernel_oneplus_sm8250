@@ -16,7 +16,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y git bc bison build-essential libssl-dev python3 clang lld llvm
-          git clone --depth=1 https://github.com/LineageOS/android_prebuilts_clang_kernel_linux-x86_64-clang-r416183b-1 clang
+          # Використовуємо інший репозиторій для Clang, який точно публічний
+          git clone --depth=1 https://github.com/LineageOS/android_prebuilts_clang_host_linux-x86_64.git clang
 
       - name: Build Kernel
         run: |
@@ -26,8 +27,9 @@ jobs:
           export CLANG_TRIPLE=aarch64-linux-gnu-
           export PATH=$PWD/clang/bin:$PATH
           
-          # Заміни 'kebab_defconfig' на той файл, який ти знайшов у папці arch/arm64/configs/vendor/
-          make O=out ARCH=arm64 kebab_defconfig
+          # УВАГА: Заміни "vendor/kebab_defconfig" на точний шлях до твого файлу
+          # Перевір шлях: arch/arm64/configs/vendor/kebab_defconfig
+          make O=out ARCH=arm64 vendor/kebab_defconfig
           make O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
 
       - name: Upload Artifact
