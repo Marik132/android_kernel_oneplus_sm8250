@@ -1,25 +1,4 @@
-name: Build Kernel
-
-on:
-  push:
-    branches: [ "oneplus/sm8250_t_13.1_op8" ]
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Source
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git bc bison build-essential libssl-dev python3 clang lld llvm
-          # Використовуємо інший репозиторій для Clang, який точно публічний
-          git clone --depth=1 https://github.com/LineageOS/android_prebuilts_clang_host_linux-x86_64.git clang
-
-      - name: Build Kernel
+- name: Build Kernel
         run: |
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
@@ -27,13 +6,6 @@ jobs:
           export CLANG_TRIPLE=aarch64-linux-gnu-
           export PATH=$PWD/clang/bin:$PATH
           
-          # УВАГА: Заміни "vendor/kebab_defconfig" на точний шлях до твого файлу
-          # Перевір шлях: arch/arm64/configs/vendor/kebab_defconfig
-          make O=out ARCH=arm64 vendor/kebab_defconfig
+          # Використовуємо kona-perf_defconfig (база для SM8250/kebab)
+          make O=out ARCH=arm64 vendor/kona-perf_defconfig
           make O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Kernel-Image
-          path: out/arch/arm64/boot/Image.gz-dtb
